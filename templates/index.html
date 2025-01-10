@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Pattern Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #007acc;
+        }
+        form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #ffffff;
+            max-width: 400px;
+            margin: auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #007acc;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005f99;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border: 1px solid #ddd;
+            display: inline-block;
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            font-size: 1.2em;
+        }
+    </style>
+    <script>
+        async function fetchPattern() {
+            const category = document.getElementById("category").value;
+            const pattern = document.getElementById("pattern").value;
+            const rows = document.getElementById("rows").value;
+
+            if (!category || !pattern || !rows) {
+                document.getElementById("result").textContent = "Please fill all fields!";
+                return;
+            }
+
+            const response = await fetch("/generate-pattern", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ category, pattern, rows })
+            });
+
+            const data = await response.json();
+            document.getElementById("result").textContent = data.result || "Error generating pattern.";
+        }
+
+        function loadPatterns() {
+            const patterns = {{ patterns | tojson }};
+            const categorySelect = document.getElementById("category");
+            const patternSelect = document.getElementById("pattern");
+
+            categorySelect.addEventListener("change", function () {
+                const selectedCategory = categorySelect.value;
+                patternSelect.innerHTML = '<option value="" disabled selected>Choose a pattern</option>';
+                if (patterns[selectedCategory]) {
+                    patterns[selectedCategory].forEach(pattern => {
+                        const option = document.createElement("option");
+                        option.value = pattern;
+                        option.textContent = pattern;
+                        patternSelect.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", loadPatterns);
+    </script>
+</head>
+<body>
+    <h1>Star Pattern Generator</h1>
+    <form onsubmit="event.preventDefault(); fetchPattern();">
+        <label for="category">Select a Category:</label>
+        <select id="category" name="category" required>
+            <option value="" disabled selected>Choose a category</option>
+            {% for category, patterns in patterns.items() %}
+                <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="pattern">Select a Pattern:</label>
+        <select id="pattern" name="pattern" required>
+            <option value="" disabled selected>Choose a pattern</option>
+        </select>
+
+        <label for="rows">Enter Number of Rows:</label>
+        <input type="number" id="rows" name="rows" min="1" required>
+
+        <button type="submit">Generate Pattern</button>
+    </form>
+
+    <h2>Generated Pattern:</h2>
+    <pre id="result">Select a category, pattern, and rows to see the result here.</pre>
+</body>
+</html>
